@@ -1,0 +1,64 @@
+large language models
+llm
+transformer
+prompt engineering
+prompt injection
+rag
+retrieval augmented generation
+vector database
+embeddings
+evaluation
+model evaluation
+llm eval
+unit tests
+unitxt
+fm-eval
+fine-tuning
+sft
+rlhf
+dpo
+inference
+quantization
+model compression
+distillation
+onnx
+tensorRT
+pytorch
+tensorflow
+jax
+huggingface
+tokenization
+nlp
+information retrieval
+semantic search
+mlops
+model monitoring
+drift
+data pipeline
+etl
+feature store
+docker
+kubernetes
+k8s
+terraform
+ci/cd
+github actions
+observability
+logging
+metrics
+privacy
+differential privacy
+secure by design
+supply chain
+data poisoning
+model inversion
+membership inference
+adversarial examples
+ai safety
+responsible ai
+governance
+fairness
+bias
+explainability
+nist ai rmf
+owasp llm top 10

@@ -73,6 +73,9 @@ def sponsorship_status(text: str) -> str:
         "sponsorship available",
         "eligible for sponsorship",
         "will sponsor",
+        "accept CPT",
+        "accept OPT",
+        "accept H1B",
         "can sponsor"
     ]
     if any(p in t for p in yes_patterns):

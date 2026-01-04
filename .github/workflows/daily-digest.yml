@@ -32,13 +32,13 @@ jobs:
           pip install -r requirements.txt
 
       - name: Get current date for test
-        id: test_date
+        id: timestamp_now
         run: echo "now=$(date +'%Y-%m-%d-%H-%M')" >> $GITHUB_OUTPUT
 
       - name: Step 1 - Fetch jobs + create/update digest issue
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
-          # Use the 'now' output from the 'test_date' step
-          ISSUE_TITLE: "Manual Test - ${{ steps.test_date.outputs.now }}"
+          # Use the 'now' output from the unique ID above
+          ISSUE_TITLE: "Manual Test - ${{ steps.timestamp_now.outputs.now }}"
         run: python scripts/fetch_jobs.py

@@ -36,7 +36,7 @@ def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]
         "q": query,
         "location": location,
         "api_key": api_key,
-        "chips": "date_posted:today"  # Only today's posts
+        "chips": "date_posted:week"  # weekly posts
     }
     
     try:
@@ -280,7 +280,12 @@ def main() -> int:
     candidates.sort(key=lambda x: (x[1], normalize(x[0].title)), reverse=True)
     candidates = candidates[: int(CONFIG.get("max_results", 15))]
 
-    md = build_digest_md(candidates)
+    # After filtering and sorting candidates...
+    if not candidates:
+        md = f"# Daily AI Internship Digest\n\nNo new matches found for {datetime.now(timezone.utc).strftime('%Y-%m-%d')}. Check back tomorrow!"
+    else:
+        md = build_digest_md(candidates)
+
     with open("digest.md", "w", encoding="utf-8") as f:
         f.write(md)
 
@@ -298,8 +303,17 @@ subprocess.run(["python", "scripts/track_stats.py", str(len(candidates))])
 
 # After the existing source loops, add:
 try:
-    # Search for AI/ML internships via Google Jobs
+    # 1. THE BROAD SEARCH (Original)
+    # This finds jobs across all boards like LinkedIn, Indeed, etc.
     all_jobs.extend(fetch_serpapi_jobs("AI intern OR ML intern OR Machine Learning intern sponsorship"))
-    all_jobs.extend(fetch_serpapi_jobs("AI security intern OR LLM intern sponsorship"))
+    
+    # 2. THE TARGETED SEARCH (New)
+    # This specifically hunts within the career portals of top companies.
+    # We use (site:A OR site:B) to group them into ONE search (saving credits).
+    targeted_query = "(site:ibm.com OR site:google.com OR site:nvidia.com) internship (AI OR ML)"
+    all_jobs.extend(fetch_serpapi_jobs(targeted_query))
+    
+    print(f"Combined Search Complete. Total jobs collected: {len(all_jobs)}")
+    
 except Exception as e:
     print(f"[WARN] SerpAPI: {e}", file=sys.stderr)

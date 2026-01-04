@@ -1,16 +1,16 @@
 name: Daily AI Internship Digest
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "0 13 * * *"  # daily 13:00 UTC (adjust later)
+    - cron: "0 6 * * *"   # daily 06:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  run-digest:
+  digest:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,20 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run fetcher
-        run: |
-          python scripts/fetch_jobs.py
-
-      - name: Create or update GitHub Issue
+      - name: Step 1 - Fetch jobs + create/update digest issue
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          title="Daily AI Internship Digest"
-          # Find existing issue number by exact title
-          existing=$(gh issue list --limit 50 --search "in:title \"$title\"" --json number,title --jq '.[] | select(.title=="'"$title"'") | .number' | head -n 1)
-
-          if [ -z "$existing" ]; then
-            gh issue create --title "$title" --body-file digest.md
-          else
-            gh issue edit "$existing" --body-file digest.md
-          fi
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/fetch_jobs.py

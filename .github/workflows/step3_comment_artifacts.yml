@@ -34,7 +34,6 @@ jobs:
           REPO: ${{ github.repository }}
         run: python scripts/step3_generate_artifacts.py
 
-      # After posting the comment, remove "approved" and add a status label
       - name: Mark processed (labels)
         uses: actions/github-script@v7
         with:

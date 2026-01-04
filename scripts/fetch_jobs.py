@@ -7,6 +7,48 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
+import os
+from serpapi import GoogleSearch
+
+def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]:
+    """
+    Fetch from Google Jobs via SerpAPI (aggregates LinkedIn, Indeed, Glassdoor)
+    Free tier: 100 searches/month
+    Get key from: https://serpapi.com/
+    """
+    api_key = os.environ.get("SERPAPI_KEY")
+    if not api_key:
+        print("[WARN] SERPAPI_KEY not set, skipping job board search")
+        return []
+    
+    params = {
+        "engine": "google_jobs",
+        "q": query,
+        "location": location,
+        "api_key": api_key,
+        "chips": "date_posted:today"  # Only today's posts
+    }
+    
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        jobs = []
+        
+        for j in results.get("jobs_results", []):
+            jobs.append(Job(
+                id=j.get("job_id", ""),
+                title=j.get("title", ""),
+                location=j.get("location", ""),
+                team="",
+                company=j.get("company_name", ""),
+                source="Google Jobs",
+                url=j.get("share_url", "") or j.get("apply_options", [{}])[0].get("link", ""),
+                description=j.get("description", "")
+            ))
+        return jobs
+    except Exception as e:
+        print(f"[WARN] SerpAPI error: {e}")
+        return []
 
 @dataclass
 class Job:
@@ -113,7 +155,8 @@ def match_score(job: Job, keyword_phrases: List[str]) -> int:
 
 
 def is_internship(job: Job, internship_keywords: List[str]) -> bool:
-    return contains_any(job.title, internship_keywords) or contains_any(job.description, internship_keywords)
+    # MUST have "intern" in the TITLE - not just description
+    return contains_any(job.title, internship_keywords)
 
 
 def location_ok(job: Job, locations: List[str]) -> bool:
@@ -247,3 +290,15 @@ def main() -> int:
 if __name__ == "__main__":
     CONFIG = load_config("config.json")
     raise SystemExit(main())
+
+# After writing digest.md
+import subprocess
+subprocess.run(["python", "scripts/track_stats.py", str(len(candidates))])
+
+# After the existing source loops, add:
+try:
+    # Search for AI/ML internships via Google Jobs
+    all_jobs.extend(fetch_serpapi_jobs("AI intern OR ML intern OR Machine Learning intern sponsorship"))
+    all_jobs.extend(fetch_serpapi_jobs("AI security intern OR LLM intern sponsorship"))
+except Exception as e:
+    print(f"[WARN] SerpAPI: {e}", file=sys.stderr)

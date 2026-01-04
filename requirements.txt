@@ -1,3 +1,6 @@
-requests>=2.31.0
+reques  ts>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=5.1.0
+serpapi>=0.4.2
+google-search-results>=2.9.0
+

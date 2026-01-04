@@ -1,0 +1,27 @@
+# Personal Information
+resumes/customized/*.pdf
+cover-letters/generated/*.pdf
+data/applications.json
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+
+# Temp files
+digest.md
+*.tmp
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

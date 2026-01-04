@@ -1,0 +1,49 @@
+name: Weekly Follow-up Reminder
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"  # Monday 2 PM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  followup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for old applications
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'artifacts-posted',
+              per_page: 100
+            });
+            
+            const oldIssues = issues.data.filter(issue => {
+              const created = new Date(issue.created_at);
+              return created < twoWeeksAgo;
+            });
+            
+            if (oldIssues.length > 0) {
+              const body = `## Follow-up Reminder\n\n` +
+                `${oldIssues.length} job(s) from 2+ weeks ago need follow-up:\n\n` +
+                oldIssues.map(i => `- #${i.number}: ${i.title}`).join('\n') +
+                `\n\nConsider sending follow-up emails if you haven't heard back.`;
+              
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '📧 Weekly Follow-up Reminder',
+                body: body,
+                labels: ['reminder']
+              });
+            }

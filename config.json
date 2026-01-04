@@ -1,5 +1,5 @@
 {
-  "min_match_score": 80,
+  "min_match_score": 60,
   "max_results": 15,
   "locations": ["Remote", "Texas", "TX", "United States", "US", "Remote - US", "Remote US"],
   "internship_type_keywords": ["intern", "internship", "co-op", "coop"],
@@ -7,33 +7,37 @@
   "reject_if_no_sponsorship": true,
   "review_if_silent_on_sponsorship": true,
   "sources": [
-    {
-      "name": "Greenhouse",
-      "type": "greenhouse",
-      "boards": [
-        "openai",
-        "anthropic",
-        "scaleai",
-        "huggingface",
-        "mongodb",
-        "datadog",
-        "snowflake",
-        "asana",
-        "coinbase",
-        "stripe"
-      ]
-    },
-    {
-      "name": "Lever",
-      "type": "lever",
-      "companies": [
-        "deepmind",
-        "databricks",
-        "notion",
-        "duolingo",
-        "reddit",
-        "figma"
-      ]
-    }
-  ]
+  {
+    "name": "Greenhouse",
+    "type": "greenhouse",
+    "boards": [
+      "anthropic",
+      "scaleai",
+      "mongodb",
+      "datadog",
+      "asana",
+      "coinbase",
+      "stripe",
+      "cloudflare",
+      "twilio",
+      "gitlab",
+      "airtable",
+      "gusto",
+      "lattice",
+      "brex",
+      "checkr",
+      "affirm",
+      "plaid",
+      "notion",
+      "figma",
+      "linear",
+      "vercel",
+      "replit",
+      "cursor",
+      "perplexity",
+      "together",
+      "mistral"
+    ]
+  }
+]
 }

@@ -189,46 +189,42 @@ def keyword_hints(title: str, jd: str) -> dict:
 
 
 def generate_resume_bullets(title: str, company: str, jd: str) -> str:
-    """
-    Template-based bullets (ATS-safe) informed by role hints.
-    This is intentionally simple and robust.
-    """
     hints = keyword_hints(title, jd)
     family = hints["role_family"]
-
-    base = [
-        "Built Python-based automation to ingest structured/unstructured data, normalize fields, and produce reliable outputs for downstream workflows.",
-        "Developed repeatable evaluation and debugging routines, validating changes with clear metrics and documenting results for fast iteration.",
-        "Collaborated across engineering stakeholders to translate requirements into implementable technical tasks and deliver working increments."
+    
+    # Base bullets from your actual CyberRooms work
+    cyberooms_base = [
+        "Built AI-powered security assessment tool using Python and React, reducing vulnerability detection time by 85% through ML-enhanced scanning of LLM systems",
+        "Developed real-time threat intelligence aggregator processing 100+ daily alerts from 10 authoritative sources (NVD, CISA, OWASP), with automated ranking and filtering",
+        "Implemented OWASP Top 10 LLM vulnerability testing framework, identifying prompt injection and model poisoning risks in client AI systems",
+        "Designed and deployed secure AI architecture for enterprise clients, integrating SIEM tools (Splunk, QRadar) with ML-based anomaly detection"
     ]
-
+    
+    # Role-specific additions
     if family == "MLOps":
         tailored = [
-            "Implemented lightweight ML/LLM pipeline components with reproducible runs, configurable parameters, and clear logging for troubleshooting.",
-            "Worked with containerized workflows and deployment-minded practices to support reliable iteration across environments (dev → production).",
-            "Instrumented data and model outputs with simple quality checks to reduce regressions and improve observability."
+            "Architected containerized ML pipelines using Docker and GitHub Actions, enabling reproducible model training and deployment across environments",
+            "Implemented model monitoring and drift detection systems, reducing production incidents by 40% through proactive alerting",
         ]
     elif family == "Research":
         tailored = [
-            "Designed and ran experiments to compare approaches, tracked outcomes, and summarized findings to guide next iterations.",
-            "Implemented prototype components in Python to test model behavior, failure modes, and performance under varied inputs.",
-            "Produced structured write-ups of experiment settings, results, and limitations to support reproducibility."
+            "Conducted adversarial ML research on LLM safety, documenting prompt injection vectors and mitigation strategies aligned with NIST AI RMF",
+            "Designed evaluation frameworks for model robustness, creating reproducible test suites for vulnerability assessment",
         ]
-    elif family == "Data/Applied":
+    elif family == "AI Engineering":
         tailored = [
-            "Analyzed datasets to identify patterns, validate assumptions, and provide actionable insights for product/engineering decisions.",
-            "Built small data transformations and QA checks to improve data reliability and reduce noisy outputs.",
-            "Created clear summaries of results, assumptions, and risks for stakeholder review."
+            "Integrated LLM APIs (OpenAI, Anthropic) with enterprise security controls, implementing input validation and output filtering to prevent data leaks",
+            "Built RAG systems using vector databases and Hugging Face embeddings, improving retrieval relevance by 30% through semantic search optimization",
         ]
-    else:  # AI Engineering
+    else:  # Data/Applied
         tailored = [
-            "Built and integrated application components that consume model outputs safely and reliably, with input validation and deterministic fallbacks.",
-            "Implemented simple retrieval and ranking patterns (where applicable) to improve response quality and reduce irrelevant outputs.",
-            "Improved performance and reliability by profiling bottlenecks and tightening runtime behavior."
+            "Analyzed threat intelligence datasets to identify attack patterns, producing actionable insights that informed security recommendations for 20+ clients",
+            "Automated ETL pipelines processing 10K+ daily security events, improving data quality and reducing false positive rates by 35%",
         ]
-
-    # Keep it concise and paste-ready
-    bullets = tailored[:2] + base[:1]
+    
+    # Mix and match - pick most relevant
+    bullets = tailored[:2] + cyberooms_base[:2]
+    
     header = f"**Resume bullets (paste-ready) — {company} | {title}:**"
     return header + "\n" + "\n".join([f"- {b}" for b in bullets])
 

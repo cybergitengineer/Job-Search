@@ -42,13 +42,26 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            try {
-              await github.rest.issues.removeLabel({ owner, repo, issue_number, name: "approved" });
-            } catch (e) {}
+            async function tryRemove(name) {
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name });
+                console.log(`Removed label: ${name}`);
+              } catch (e) {
+                console.log(`Could not remove label "${name}": ${e.message}`);
+              }
+            }
+
+            await tryRemove("approved");
+            await tryRemove("Approved");
 
             try {
               await github.rest.issues.addLabels({
                 owner, repo, issue_number,
                 labels: ["artifacts-posted"]
               });
-            } catch (e) {}
+              console.log("Added label: artifacts-posted");
+            } catch (e) {
+              console.log(`Could not add label "artifacts-posted": ${e.message}`);
+              throw e;
+            }
+

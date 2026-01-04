@@ -4,12 +4,22 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
-
 import requests
-
 import os
 from serpapi import GoogleSearch
 
+@dataclass
+class Job:
+    id: str
+    title: str
+    location: str
+    team: str
+    company: str
+    source: str
+    url: str
+    description: str
+
+# NOW define the functions that use 'Job'
 def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]:
     """
     Fetch from Google Jobs via SerpAPI (aggregates LinkedIn, Indeed, Glassdoor)
@@ -50,16 +60,7 @@ def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]
         print(f"[WARN] SerpAPI error: {e}")
         return []
 
-@dataclass
-class Job:
-    id: str
-    title: str
-    location: str
-    team: str
-    company: str
-    source: str
-    url: str
-    description: str
+
 
 
 def load_text_lines(path: str) -> List[str]:

@@ -56,7 +56,6 @@ jobs:
         uses: imjohnbo/issue-bot@v3
         with:
           title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          # CHANGE THIS LINE FROM 'body' TO 'content-filepath'
+          # Use this exact key to tell the bot to READ the file
           content-filepath: ./digest.md 
           token: ${{ github.token }}
-          labels: "needs-review"

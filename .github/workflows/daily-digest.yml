@@ -57,5 +57,6 @@ jobs:
         with:
           title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
           # Use this exact key to tell the bot to READ the file
-          content-filepath: ./digest.md 
+          content-filepath: ./scripts/digest.md 
           token: ${{ github.token }}
+          labels: "needs-review"

@@ -316,7 +316,7 @@ try:
     # 2. THE TARGETED SEARCH (New)
     # This specifically hunts within the career portals of top companies.
     # We use (site:A OR site:B) to group them into ONE search (saving credits).
-    targeted_query = "(site:ibm.com OR site:google.com OR site:nvidia.com) internship (AI OR ML)"
+    targeted_query = "(site:https://ibmglobal.avature.net/en_US/careers/ OR site:google.com OR site:nvidia.com) internship (AI OR ML)"
     all_jobs.extend(fetch_serpapi_jobs(targeted_query))
     
     print(f"Combined Search Complete. Total jobs collected: {len(all_jobs)}")

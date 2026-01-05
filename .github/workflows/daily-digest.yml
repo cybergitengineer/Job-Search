@@ -47,7 +47,8 @@ jobs:
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3
         with:
-          # This now correctly references the 'test_timestamp' step above
           title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          body: ./digest.md
+          # CRITICAL CHANGE: Use content-filepath to read the actual data
+          content-filepath: ./digest.md
+          labels: "needs-review" 
           token: ${{ github.token }}

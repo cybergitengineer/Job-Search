@@ -44,6 +44,14 @@ jobs:
           ISSUE_TITLE: "Manual Test - ${{ steps.test_timestamp.outputs.now }}"
         run: python scripts/fetch_jobs.py
 
+      - name: Debug - Check File Content
+        run: |
+          echo "Checking if digest.md exists..."
+          ls -l digest.md
+          echo "--- File Content Start ---"
+          cat digest.md
+          echo "--- File Content End ---"  
+
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3
         with:

@@ -56,7 +56,6 @@ jobs:
         uses: imjohnbo/issue-bot@v3
         with:
           title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          # CRITICAL CHANGE: Use content-filepath to read the actual data
-          content-filepath: ./digest.md
-          labels: "needs-review" 
+          body: ./digest.md  # If using v3, try body first with the corrected Python path
           token: ${{ github.token }}
+          labels: "needs-review"

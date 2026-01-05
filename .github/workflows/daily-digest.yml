@@ -56,6 +56,7 @@ jobs:
         uses: imjohnbo/issue-bot@v3
         with:
           title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          body: ./digest.md  # If using v3, try body first with the corrected Python path
+          # CHANGE THIS LINE FROM 'body' TO 'content-filepath'
+          content-filepath: ./digest.md 
           token: ${{ github.token }}
           labels: "needs-review"

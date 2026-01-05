@@ -311,7 +311,7 @@ subprocess.run(["python", "scripts/track_stats.py", str(len(candidates))])
 try:
     # 1. THE BROAD SEARCH (Original)
     # This finds jobs across all boards like LinkedIn, Indeed, etc.
-    all_jobs.extend(fetch_serpapi_jobs("AI intern OR ML intern OR Machine Learning intern OR Internship OR Accepts Sponsorship"))
+    all_jobs.extend(fetch_serpapi_jobs("AI intern OR Intern ORML intern OR Machine Learning intern OR Internship OR Accepts Sponsorship"))
     
     # 2. THE TARGETED SEARCH (New)
     # This specifically hunts within the career portals of top companies.

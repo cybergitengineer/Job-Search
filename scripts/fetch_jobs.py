@@ -286,13 +286,16 @@ def main() -> int:
     else:
         md = build_digest_md(candidates)
 
+    # --- END OF YOUR LOGIC (where 'md' has been created) ---
+
+    # 1. Define the path first (points one level up to the root)
+    file_path = os.path.join(os.path.dirname(__file__), '..', 'digest.md')
+    
+    # 2. Now open the file using that defined path
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(md)
 
     print(f"Workflow finished. File saved to: {os.path.abspath(file_path)}")
-    
-    # --- END OF PLACEMENT ---
-    
     return 0
 
 

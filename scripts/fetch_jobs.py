@@ -106,16 +106,28 @@ def match_score(job: Job, keyword_phrases: List[str]) -> int:
     seen = set()
     for kw in keyword_phrases:
         k = normalize(kw)
-        if k and k in t and k not in seen:
+        if not k or k in seen:
+            continue
+        if k in t:
             hits += 1
             seen.add(k)
 
-    score = int(min(100, (hits / 10) * 80))
-    if hits >= 15:
-        score = 95
-    if hits >= 20:
-        score = 100
-    return score
+    # Practical scoring:
+    # - 80 should be achievable with ~8 good keyword hits, not 10–15
+    score = min(100, hits * 10)  # hits=8 -> 80
+
+    # Bonus signals for true internships
+    title = normalize(job.title)
+    if "intern" in title or "internship" in title or "co-op" in title or "coop" in title:
+        score = min(100, score + 10)
+
+    # Bonus if description mentions visa/CPT/OPT (relevant to your filter)
+    desc = normalize(job.description)
+    if "cpt" in desc or "opt" in desc or "visa" in desc or "sponsorship" in desc:
+        score = min(100, score + 5)
+
+    return int(score)
+
 
 
 def is_internship(job: Job, internship_keywords: List[str]) -> bool:
@@ -322,6 +334,8 @@ def main() -> int:
         counts["sponsor_ok"] += 1
 
         score = match_score(job, keyword_phrases)
+        print(f"[DEBUG] SCORE {score:3} | {job.company} | {job.title} | {job.location}")
+
         if score < int(CONFIG.get("min_match_score", 0)):
             continue
         counts["score_ok"] += 1
@@ -332,6 +346,8 @@ def main() -> int:
     # ✅ THIS IS THE PRINT YOU ASKED ABOUT (EXACTLY)
     print(f"[INFO] Intern-filtered matches: {len(candidates)}")
     print("[DEBUG] Filter counts:", counts)
+    print("[DEBUG] Pre-score candidates (location+sponsor ok):", len([1 for _ in candidates]))
+
 
     # Sort and cap results
     candidates.sort(key=lambda x: (x[1], normalize(x[0].title)), reverse=True)

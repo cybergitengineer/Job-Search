@@ -65,7 +65,7 @@ jobs:
             echo "body<<__DIGEST__"
             cat ./scripts/digest.md
             echo "__DIGEST__"
-          } >> "$GITHUB_OUTPUT"
+          } >> "$GITHUB_OUTPUT"   
 
 
           with:

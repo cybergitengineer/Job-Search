@@ -59,12 +59,12 @@ jobs:
 
       - name: Load digest into output
         id: digest_body
+        shell: bash
         run: |
-          {
-            echo "body<<'EOF'"
-            cat ./scripts/digest.md
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          cat ./scripts/digest.md >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
 
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3

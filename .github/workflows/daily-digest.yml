@@ -58,12 +58,14 @@ jobs:
           test -f ./scripts/digest.md || (echo "scripts/digest.md not found. Step 1 did not generate it." && exit 1)
 
       - name: Load digest into output
-        id: digest
+        id: digest_body
         shell: bash
         run: |
-          echo "body<<__DIGEST__" >> "$GITHUB_OUTPUT"
+          DELIM="EOF_$(date +%s)"
+          echo "body<<$DELIM" >> "$GITHUB_OUTPUT"
           cat ./scripts/digest.md >> "$GITHUB_OUTPUT"
-          echo "__DIGEST__" >> "$GITHUB_OUTPUT"
+          echo "$DELIM" >> "$GITHUB_OUTPUT"
+
 
 
 

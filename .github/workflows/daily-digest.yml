@@ -58,15 +58,18 @@ jobs:
           test -f ./scripts/digest.md || (echo "scripts/digest.md not found. Step 1 did not generate it." && exit 1)
 
       - name: Load digest into output
-        id: digest_body
+        id: digest
         shell: bash
         run: |
-          DELIM="EOF_$(date +%s)"
-          echo "body<<$DELIM" >> "$GITHUB_OUTPUT"
-          cat ./scripts/digest.md >> "$GITHUB_OUTPUT"
-          echo "$DELIM" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<__DIGEST__"
+            cat ./scripts/digest.md
+            echo "__DIGEST__"
+          } >> "$GITHUB_OUTPUT"
 
 
+          with:
+            body: ${{ steps.digest.outputs.body }}
 
 
       - name: Step 2 - Create or Update Issue

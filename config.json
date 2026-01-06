@@ -1,7 +1,7 @@
 {
-  "min_match_score": 60,
+  "min_match_score": 80,
   "max_results": 15,
-  "locations": ["Remote", "Texas", "TX", "United States", "US", "Remote - US", "Remote US"],
+  "locations": ["Remote", "Texas", "Frisco", "Dallas", "TX", "United States", "US", "Remote - US", "Remote US"],
   "internship_type_keywords": ["intern", "internship", "co-op", "coop"],
   "role_keywords": ["ai", "ml", "machine learning", "mlops", "llm", "genai", "data science", "ai engineer"],
   "reject_if_no_sponsorship": true,

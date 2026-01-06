@@ -268,7 +268,8 @@ def main() -> int:
         # ✅ THIS IS THE LINE YOU ASKED ABOUT (EXACTLY)
         q = f'("AI intern" OR "ML intern" OR "MLOps intern" OR "Machine Learning Intern" OR "AI Engineering Intern" OR internship OR co-op) {location_query}'
 
-        serp_jobs = fetch_serpapi_jobs(q, location="United States")
+        serp_jobs = fetch_serpapi_jobs('"AI intern" OR "ML intern" OR "MLOps intern" OR "Machine Learning Intern" OR internship OR "co-op" OR coop')
+        print(f"[INFO] SerpAPI jobs fetched: {len(serp_jobs)}")
         all_jobs.extend(serp_jobs)
     except Exception as e:
         print(f"[WARN] SerpAPI: {e}", file=sys.stderr)

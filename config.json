@@ -1,43 +1,74 @@
 {
   "min_match_score": 60,
   "max_results": 15,
-  "locations": ["Remote", "Texas", "Frisco", "Dallas", "TX", "United States", "US", "Remote - US", "Remote US"],
-  "internship_type_keywords": ["intern", "internship", "co-op", "coop"],
-  "role_keywords": ["ai", "ml", "machine learning", "mlops", "llm", "genai", "data science", "ai engineer"],
+
+  "locations": [
+    "Remote",
+    "Remote - US",
+    "Remote - USA",
+    "Remote US",
+    "United States (Remote)",
+
+    "Texas",
+    "TX",
+    "Austin",
+    "Dallas",
+    "Frisco",
+    "Houston",
+    "Plano",
+    "Irving",
+    "San Antonio"
+  ],
+
+  "internship_type_keywords": [
+    "intern",
+    "internship",
+    "co-op",
+    "coop",
+    "student",
+    "new grad intern",
+    "graduate intern"
+  ],
+
+  "role_keywords": [
+    "machine learning",
+    "ml ",
+    " ml",
+    "mlops",
+    "model training",
+    "training pipeline",
+    "inference",
+    "evaluation",
+    "model evaluation",
+    "deep learning",
+    "neural network",
+    "pytorch",
+    "tensorflow",
+    "transformer",
+    "large language model",
+    "language model",
+    "llm",
+    "genai",
+    "rag",
+    "retrieval-augmented",
+    "retrieval augmented",
+    "embedding",
+    "vector database",
+    "semantic search",
+    "nlp",
+    "natural language",
+    "computer vision",
+    "cv ",
+    "cv/",
+    "data science",
+    "applied scientist",
+    "research intern",
+    "ml engineer",
+    "machine learning engineer",
+    "ai engineer",
+    "ai research"
+  ],
+
   "reject_if_no_sponsorship": true,
-  "review_if_silent_on_sponsorship": true,
-  "sources": [
-  {
-    "name": "Greenhouse",
-    "type": "greenhouse",
-    "boards": [
-      "anthropic",
-      "scaleai",
-      "mongodb",
-      "datadog",
-      "asana",
-      "coinbase",
-      "stripe",
-      "cloudflare",
-      "twilio",
-      "gitlab",
-      "airtable",
-      "gusto",
-      "lattice",
-      "brex",
-      "checkr",
-      "affirm",
-      "plaid",
-      "notion",
-      "figma",
-      "linear",
-      "vercel",
-      "replit",
-      "cursor",
-      "perplexity",
-      "together",
-      "mistral"
-    ]
-  }
-]
+  "review_if_silent_on_sponsorship": true
 }

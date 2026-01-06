@@ -22,9 +22,6 @@ class Job:
     description: str
 
 
-# ----------------------------
-# Intern role detection helpers
-# ----------------------------
 INTERN_POSITIVE = [
     "intern", "internship", "co-op", "coop", "student", "graduate intern",
     "summer intern", "fall intern", "spring intern", "year-round"
@@ -38,18 +35,13 @@ INTERN_NEGATIVE = [
 
 def is_intern_role(title: str) -> bool:
     t = (title or "").lower()
-    # Must contain a positive intern marker
     if not any(k in t for k in INTERN_POSITIVE):
         return False
-    # Exclude obvious senior titles
     if any(re.search(rf"\b{re.escape(k)}\b", t) for k in INTERN_NEGATIVE):
         return False
     return True
 
 
-# ----------------------------
-# Loaders / utils
-# ----------------------------
 def load_text_lines(path: str) -> List[str]:
     with open(path, "r", encoding="utf-8") as f:
         lines = [ln.strip() for ln in f.readlines()]
@@ -70,9 +62,6 @@ def contains_any(hay: str, needles: List[str]) -> bool:
     return any(str(n).lower() in h for n in needles)
 
 
-# ----------------------------
-# Sponsorship inference
-# ----------------------------
 def sponsorship_status(text: str) -> str:
     t = normalize(text)
     no_patterns = [
@@ -95,9 +84,6 @@ def sponsorship_status(text: str) -> str:
     return "UNKNOWN"
 
 
-# ----------------------------
-# Matching / scoring
-# ----------------------------
 def match_score(job: Job, keyword_phrases: List[str]) -> int:
     text = f"{job.title}\n{job.team}\n{job.description}"
     t = normalize(text)
@@ -106,36 +92,19 @@ def match_score(job: Job, keyword_phrases: List[str]) -> int:
     seen = set()
     for kw in keyword_phrases:
         k = normalize(kw)
-        if not k or k in seen:
-            continue
-        if k in t:
+        if k and k in t and k not in seen:
             hits += 1
             seen.add(k)
 
-    # IMPORTANT: base score because the job already passed your hard filters
-    score = 60 + (hits * 5)   # hits=4 -> 80, hits=6 -> 90
-
-    # Bonus: strong internship signals
-    title = normalize(job.title)
-    if "intern" in title or "internship" in title or "co-op" in title or "coop" in title:
-        score += 15
-
-    # Bonus: AI/ML core terms
-    if any(x in t for x in ["machine learning", "ml", "llm", "large language model", "rag", "pytorch", "tensorflow", "transformers"]):
-        score += 10
-
-    # Bonus: visa/CPT/OPT mention
-    desc = normalize(job.description)
-    if any(x in desc for x in ["cpt", "opt", "visa", "sponsorship"]):
-        score += 5
-
-    return int(min(100, max(0, score)))
-
-
+    score = int(min(100, (hits / 10) * 80))
+    if hits >= 15:
+        score = 95
+    if hits >= 20:
+        score = 100
+    return score
 
 
 def is_internship(job: Job, internship_keywords: List[str]) -> bool:
-    # If "intern" isn't in title, check description too
     in_title = contains_any(job.title, internship_keywords)
     return in_title or ("intern" in (job.description or "").lower())
 
@@ -143,38 +112,32 @@ def is_internship(job: Job, internship_keywords: List[str]) -> bool:
 def location_ok(job: Job, locations: List[str]) -> bool:
     if not locations:
         return True
-
     loc = normalize(job.location)
-
-    # If it's remote, require US/USA wording unless you explicitly allow Canada, etc.
-    if "remote" in loc:
-        us_markers = ["usa", "united states", "us", "u.s."]
-        if any(m in loc for m in us_markers):
-            return True
-        # If remote but explicitly another country, reject
-        country_block = ["uk", "united kingdom", "canada", "poland", "spain", "india", "germany", "france", "australia"]
-        if any(c in loc for c in country_block):
-            return False
-        # If remote but silent (no country), keep only if user asked for Remote US (treat as review)
-        # You can decide: keep or reject. For now: keep.
-        return any("remote" in normalize(x) for x in locations)
-
-    # If Texas is allowed, accept major Texas city mentions even if "Texas" isn't written
-    texas_markers = ["texas", "tx", "austin", "dallas", "houston", "san antonio"]
-    if any("texas" in normalize(x) or "tx" in normalize(x) for x in locations):
-        if any(m in loc for m in texas_markers):
-            return True
-
-    # Normal substring match
-    return any(normalize(x) in loc for x in locations)
+    return any(normalize(x) in loc for x in locations) or \
+           ("remote" in loc and any("remote" in normalize(x) for x in locations))
 
 
+def fetch_greenhouse_jobs(board: str) -> List[Job]:
+    url = f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true"
+    r = requests.get(url, timeout=30)
+    r.raise_for_status()
+    data = r.json()
+    jobs = []
+    for j in data.get("jobs", []):
+        jobs.append(Job(
+            id=str(j.get("id")),
+            title=j.get("title", ""),
+            location=(j.get("location") or {}).get("name", "") if isinstance(j.get("location"), dict) else (j.get("location") or ""),
+            team=j.get("department", {}).get("name", "") if isinstance(j.get("department"), dict) else "",
+            company=board,
+            source="Greenhouse",
+            url=j.get("absolute_url", ""),
+            description=j.get("content", "") or ""
+        ))
+    return jobs
 
-# ----------------------------
-# Sources: SerpAPI + Greenhouse
-# ----------------------------
+
 def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]:
-    """Fetch from Google Jobs via SerpAPI"""
     api_key = os.environ.get("SERPAPI_KEY")
     if not api_key:
         print("[WARN] SERPAPI_KEY not set, skipping job board search")
@@ -191,20 +154,18 @@ def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]
     try:
         search = GoogleSearch(params)
         results = search.get_dict()
-        jobs: List[Job] = []
+        jobs = []
 
         for j in results.get("jobs_results", []):
             jobs.append(Job(
-                id=j.get("job_id", "") or str(j.get("job_id", "")),
-                title=j.get("title", "") or "",
-                location=j.get("location", "") or "",
+                id=j.get("job_id", ""),
+                title=j.get("title", ""),
+                location=j.get("location", ""),
                 team="",
-                company=j.get("company_name", "") or "",
+                company=j.get("company_name", ""),
                 source="Google Jobs",
-                url=j.get("share_url", "") or (
-                    (j.get("apply_options", [{}])[0].get("link", "") if j.get("apply_options") else "")
-                ),
-                description=j.get("description", "") or ""
+                url=j.get("share_url", "") or (j.get("apply_options", [{}])[0].get("link", "") if j.get("apply_options") else ""),
+                description=j.get("description", "")
             ))
 
         print(f"[INFO] SerpAPI returned {len(jobs)} jobs for query: {query[:80]}...")
@@ -214,61 +175,31 @@ def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]
         return []
 
 
-def fetch_greenhouse_jobs(board: str) -> List[Job]:
-    url = f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true"
-    r = requests.get(url, timeout=30)
-    r.raise_for_status()
-    data = r.json()
-    jobs: List[Job] = []
-
-    for j in data.get("jobs", []):
-        jobs.append(Job(
-            id=str(j.get("id")),
-            title=j.get("title", "") or "",
-            location=(j.get("location") or {}).get("name", "") if isinstance(j.get("location"), dict) else (j.get("location") or ""),
-            team=j.get("department", {}).get("name", "") if isinstance(j.get("department"), dict) else "",
-            company=board,
-            source="Greenhouse",
-            url=j.get("absolute_url", "") or "",
-            description=j.get("content", "") or ""
-        ))
-    return jobs
-
-
-# ----------------------------
-# Digest builder
-# ----------------------------
 def build_digest_md(rows: List[Tuple[Job, int, str]]) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    md: List[str] = []
-    md.append("# Daily AI Internship Digest\n\n")
-    md.append(f"Generated: **{now}**\n\n")
+    md = []
+    md.append(f"# Daily AI Internship Digest\n")
+    md.append(f"Generated: **{now}**\n")
     md.append(
         f"Filters: score ≥ **{CONFIG['min_match_score']}**, max **{CONFIG['max_results']}**, "
-        f"locations: **Remote US + Texas**, sponsorship: **reject if explicit NO; silent = review**\n\n"
+        f"locations: **Remote US + Texas**, sponsorship: **reject if explicit NO; silent = review**\n"
     )
-    md.append("---\n\n")
+    md.append("---\n")
     md.append("| Score | Sponsorship | Title | Company | Source | Location | Link |\n")
     md.append("|---:|:---:|---|---|---|---|---|\n")
-
     for job, score, sponsor in rows:
-        title = (job.title or "").replace("|", " ")
-        company = (job.company or "").replace("|", " ")
-        source = (job.source or "").replace("|", " ")
+        title = job.title.replace("|", " ")
+        company = job.company.replace("|", " ")
+        source = job.source.replace("|", " ")
         loc = (job.location or "").replace("|", " ")
-        url = job.url or ""
-        md.append(f"| {score} | {sponsor} | {title} | {company} | {source} | {loc} | [Apply]({url}) |\n")
-
-    md.append("\n---\n\n")
+        md.append(f"| {score} | {sponsor} | {title} | {company} | {source} | {loc} | [Apply]({job.url}) |\n")
+    md.append("\n---\n")
     md.append("### Notes\n")
     md.append("- **Sponsorship** is inferred from posting text. If it says **NO sponsorship / US citizen only / clearance required**, it is rejected.\n")
     md.append("- If sponsorship is **silent**, it is marked **UNKNOWN** and kept for review.\n")
     return "".join(md)
 
 
-# ----------------------------
-# Main
-# ----------------------------
 def main() -> int:
     keyword_phrases = load_text_lines("keywords.txt")
 
@@ -286,27 +217,13 @@ def main() -> int:
                     print(f"[WARN] Greenhouse {board}: {e}", file=sys.stderr)
 
     # Fetch from SerpAPI (Google Jobs aggregator)
+    # Where your requested 'q = f(...)' line belongs.
     try:
         print("[INFO] Fetching from SerpAPI (Google Jobs)...")
-
-        # Build a location query from your config (kept simple and robust)
-        # If your config locations includes "Remote US" and "Texas", we map that to a reasonable Google Jobs location hint.
-        locations = CONFIG.get("locations", [])
-        loc_tokens: List[str] = []
-        for x in locations:
-            xl = normalize(x)
-            if "texas" in xl or "tx" in xl:
-                loc_tokens.append('"Texas"')
-            if "remote" in xl:
-                loc_tokens.append('"Remote"')
-            if "united states" in xl or "usa" in xl or "us" == xl:
-                loc_tokens.append('"United States"')
-
-        location_query = " ".join(loc_tokens) if loc_tokens else '"United States"'
-        # ✅ THIS IS THE LINE YOU ASKED ABOUT (EXACTLY)
+        # Locations: Remote US + Texas
+        location_query = '(remote OR "Texas" OR Austin OR Dallas OR Houston)'
         q = f'("AI intern" OR "ML intern" OR "MLOps intern" OR "Machine Learning Intern" OR "AI Engineering Intern" OR internship OR co-op) {location_query}'
-
-        serp_jobs = fetch_serpapi_jobs('"AI intern" OR "ML intern" OR "MLOps intern" OR "Machine Learning Intern" OR internship OR "co-op" OR coop')
+        serp_jobs = fetch_serpapi_jobs(q, location="United States")
         print(f"[INFO] SerpAPI jobs fetched: {len(serp_jobs)}")
         all_jobs.extend(serp_jobs)
     except Exception as e:
@@ -319,38 +236,35 @@ def main() -> int:
     locations = CONFIG.get("locations", [])
 
     candidates: List[Tuple[Job, int, str]] = []
+
+    # Debug counters
     counts = {
-    "total": 0,
-    "intern_title_ok": 0,
-    "internship_kw_ok": 0,
-    "role_kw_ok": 0,
-    "location_ok": 0,
-    "sponsor_ok": 0,
-    "score_ok": 0,
-}
-    pre_score = 0
+        "total": len(all_jobs),
+        "intern_title_ok": 0,
+        "internship_kw_ok": 0,
+        "role_kw_ok": 0,
+        "location_ok": 0,
+        "sponsor_ok": 0,
+        "score_ok": 0,
+    }
 
     for job in all_jobs:
-        counts["total"] += 1
-
         text_for_role = f"{job.title}\n{job.description}\n{job.team}"
 
-        # Intern title gate
-        if not is_intern_role(job.title):
+        # FIX: dataclass fields, not dict access
+        title = job.title
+        if not is_intern_role(title):
             continue
         counts["intern_title_ok"] += 1
 
-        # Internship keyword gate
         if not is_internship(job, internship_kw):
             continue
         counts["internship_kw_ok"] += 1
 
-        # Role keywords gate
         if not contains_any(text_for_role, role_kw):
             continue
         counts["role_kw_ok"] += 1
 
-        # Location gate
         if not location_ok(job, locations):
             continue
         counts["location_ok"] += 1
@@ -359,41 +273,31 @@ def main() -> int:
         if CONFIG.get("reject_if_no_sponsorship", False) and sponsor == "NO":
             continue
         counts["sponsor_ok"] += 1
-        pre_score += 1
 
         score = match_score(job, keyword_phrases)
-        print(f"[DEBUG] SCORE {score:3} | {job.company} | {job.title} | {job.location}")
+
+        # Optional debug: show near-misses
+        if score >= 25:
+            print(f"[DEBUG] SCORE  {score:>2} | {job.company} | {job.title} | {job.location}")
 
         if score < int(CONFIG.get("min_match_score", 0)):
             continue
         counts["score_ok"] += 1
 
         candidates.append((job, score, sponsor))
-        
-
-    # ✅ THIS IS THE PRINT YOU ASKED ABOUT (EXACTLY)
-    print(f"[DEBUG] Pre-score candidates (location+sponsor ok): {pre_score}")
 
     print(f"[INFO] Intern-filtered matches: {len(candidates)}")
-    print("[DEBUG] Filter counts:", counts)
-    print("[DEBUG] Pre-score candidates (location+sponsor ok):", len([1 for _ in candidates]))
-    
+    print(f"[DEBUG] Filter counts: {counts}")
+    print(f"[DEBUG] Pre-score candidates (location+sponsor ok): {counts['sponsor_ok']}")
 
-    # Sort and cap results
     candidates.sort(key=lambda x: (x[1], normalize(x[0].title)), reverse=True)
     candidates = candidates[: int(CONFIG.get("max_results", 15))]
 
-    # Build digest
     if not candidates:
-        md = (
-            "# Daily AI Internship Digest\n\n"
-            f"No new matches found for {datetime.now(timezone.utc).strftime('%Y-%m-%d')}. "
-            "Check back tomorrow!"
-        )
+        md = f"# Daily AI Internship Digest\n\nNo new matches found for {datetime.now(timezone.utc).strftime('%Y-%m-%d')}. Check back tomorrow!"
     else:
         md = build_digest_md(candidates)
 
-    # Save to scripts/digest.md (for GitHub Actions workflow)
     output_path = os.path.join("scripts", "digest.md")
     os.makedirs("scripts", exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

@@ -55,9 +55,8 @@ jobs:
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3
         with:
-          title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          # CHANGE THIS KEY from 'content-filepath' to 'body' 
-          # and use this specific syntax to read the file:
-          body: ${{ fromJSON(toJSON(steps.fetch.outputs.digest)) || './scripts/digest.md' }}
+          issue-title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
+          # This key 'body-filepath' is the standard way for this bot to read a file
+          body-filepath: ./digest.md
           token: ${{ github.token }}
           labels: "needs-review"

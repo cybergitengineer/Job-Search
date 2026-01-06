@@ -281,32 +281,57 @@ def main() -> int:
     locations = CONFIG.get("locations", [])
 
     candidates: List[Tuple[Job, int, str]] = []
+    counts = {
+    "total": 0,
+    "intern_title_ok": 0,
+    "internship_kw_ok": 0,
+    "role_kw_ok": 0,
+    "location_ok": 0,
+    "sponsor_ok": 0,
+    "score_ok": 0,
+}
+
     for job in all_jobs:
+        counts["total"] += 1
+
         text_for_role = f"{job.title}\n{job.description}\n{job.team}"
 
-        # ✅ Intern title gate (fixes your dataclass bug)
+        # Intern title gate
         if not is_intern_role(job.title):
             continue
+        counts["intern_title_ok"] += 1
 
+        # Internship keyword gate
         if not is_internship(job, internship_kw):
             continue
+        counts["internship_kw_ok"] += 1
+
+        # Role keywords gate
         if not contains_any(text_for_role, role_kw):
             continue
+        counts["role_kw_ok"] += 1
+
+        # Location gate
         if not location_ok(job, locations):
             continue
+        counts["location_ok"] += 1
 
         sponsor = sponsorship_status(text_for_role)
         if CONFIG.get("reject_if_no_sponsorship", False) and sponsor == "NO":
             continue
+        counts["sponsor_ok"] += 1
 
         score = match_score(job, keyword_phrases)
         if score < int(CONFIG.get("min_match_score", 0)):
             continue
+        counts["score_ok"] += 1
 
         candidates.append((job, score, sponsor))
 
+
     # ✅ THIS IS THE PRINT YOU ASKED ABOUT (EXACTLY)
     print(f"[INFO] Intern-filtered matches: {len(candidates)}")
+    print("[DEBUG] Filter counts:", counts)
 
     # Sort and cap results
     candidates.sort(key=lambda x: (x[1], normalize(x[0].title)), reverse=True)

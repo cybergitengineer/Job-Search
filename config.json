@@ -1,5 +1,5 @@
 {
-  "min_match_score": 80,
+  "min_match_score": 60,
   "max_results": 15,
   "locations": ["Remote", "Texas", "Frisco", "Dallas", "TX", "United States", "US", "Remote - US", "Remote US"],
   "internship_type_keywords": ["intern", "internship", "co-op", "coop"],

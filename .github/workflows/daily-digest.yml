@@ -57,6 +57,6 @@ jobs:
         with:
           issue-title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
           # This key 'body-filepath' is the standard way for this bot to read a file
-          body-filepath: ./digest.md
+          body-filepath: ./scripts/digest.md
           token: ${{ github.token }}
           labels: "needs-review"

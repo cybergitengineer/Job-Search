@@ -60,6 +60,17 @@ def fetch_serpapi_jobs(query: str, location: str = "United States") -> List[Job]
         print(f"[WARN] SerpAPI error: {e}")
         return []
 
+import requests
+
+def fetch_greenhouse_jobs(board_token):
+    url = f"https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get('jobs', [])
+    return []
+
+# Example Usage for companies like Airbnb or Figma
+# jobs = fetch_greenhouse_jobs("airbnb")
 
 def load_text_lines(path: str) -> List[str]:
     with open(path, "r", encoding="utf-8") as f:
@@ -77,8 +88,9 @@ def normalize(s: str) -> str:
 
 
 def contains_any(hay: str, needles: List[str]) -> bool:
-    h = normalize(hay)
-    return any(normalize(n) in h for n in needles)
+    # Ensure hay is stringified and normalized
+    h = str(hay).lower()
+    return any(str(n).lower() in h for n in needles)
 
 
 def sponsorship_status(text: str) -> str:
@@ -124,8 +136,10 @@ def match_score(job: Job, keyword_phrases: List[str]) -> int:
 
 
 def is_internship(job: Job, internship_keywords: List[str]) -> bool:
-    # MUST have "intern" in the TITLE - not just description
-    return contains_any(job.title, internship_keywords)
+    # Broaden this: If "intern" isn't in title, check the description too
+    in_title = contains_any(job.title, internship_keywords)
+    # Optional: check description if title fails, but maybe only for "intern"
+    return in_title or ("intern" in job.description.lower())
 
 
 def location_ok(job: Job, locations: List[str]) -> bool:
@@ -221,7 +235,7 @@ def main() -> int:
             continue
         
         sponsor = sponsorship_status(text_for_role)
-        if CONFIG.get("reject_if_no_sponsorship", True) and sponsor == "NO":
+        if CONFIG.get("reject_if_no_sponsorship", False) and sponsor == "NO":
             continue
         
         score = match_score(job, keyword_phrases)

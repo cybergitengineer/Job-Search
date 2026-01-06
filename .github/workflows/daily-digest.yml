@@ -47,22 +47,29 @@ jobs:
 
       - name: Debug - Check File Content
         run: |
-          echo "Checking if digest.md exists..."
+          echo "Checking if scripts/digest.md exists..."
           ls -l ./scripts/digest.md
           echo "--- File Content Start ---"
           cat ./scripts/digest.md
           echo "--- File Content End ---"
-          
+
       - name: Verify digest exists
         run: |
           test -f ./scripts/digest.md || (echo "scripts/digest.md not found. Step 1 did not generate it." && exit 1)
-    
+
+      - name: Load digest into output
+        id: digest_body
+        run: |
+          {
+            echo "body<<'EOF'"
+            cat ./scripts/digest.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3
         with:
-          title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
-          # This key 'body-filepath' is the standard way for this bot to read a file
-          filepath: ./scripts/digest.md
           token: ${{ github.token }}
+          title: "Daily AI Internship Digest - ${{ steps.test_timestamp.outputs.now }}"
+          body: ${{ steps.digest_body.outputs.body }}
           labels: "needs-review"

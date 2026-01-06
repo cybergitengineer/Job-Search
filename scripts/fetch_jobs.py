@@ -112,21 +112,25 @@ def match_score(job: Job, keyword_phrases: List[str]) -> int:
             hits += 1
             seen.add(k)
 
-    # Practical scoring:
-    # - 80 should be achievable with ~8 good keyword hits, not 10–15
-    score = min(100, hits * 10)  # hits=8 -> 80
+    # IMPORTANT: base score because the job already passed your hard filters
+    score = 60 + (hits * 5)   # hits=4 -> 80, hits=6 -> 90
 
-    # Bonus signals for true internships
+    # Bonus: strong internship signals
     title = normalize(job.title)
     if "intern" in title or "internship" in title or "co-op" in title or "coop" in title:
-        score = min(100, score + 10)
+        score += 15
 
-    # Bonus if description mentions visa/CPT/OPT (relevant to your filter)
+    # Bonus: AI/ML core terms
+    if any(x in t for x in ["machine learning", "ml", "llm", "large language model", "rag", "pytorch", "tensorflow", "transformers"]):
+        score += 10
+
+    # Bonus: visa/CPT/OPT mention
     desc = normalize(job.description)
-    if "cpt" in desc or "opt" in desc or "visa" in desc or "sponsorship" in desc:
-        score = min(100, score + 5)
+    if any(x in desc for x in ["cpt", "opt", "visa", "sponsorship"]):
+        score += 5
 
-    return int(score)
+    return int(min(100, max(0, score)))
+
 
 
 
@@ -139,9 +143,31 @@ def is_internship(job: Job, internship_keywords: List[str]) -> bool:
 def location_ok(job: Job, locations: List[str]) -> bool:
     if not locations:
         return True
+
     loc = normalize(job.location)
-    return any(normalize(x) in loc for x in locations) or \
-        ("remote" in loc and any("remote" in normalize(x) for x in locations))
+
+    # If it's remote, require US/USA wording unless you explicitly allow Canada, etc.
+    if "remote" in loc:
+        us_markers = ["usa", "united states", "us", "u.s."]
+        if any(m in loc for m in us_markers):
+            return True
+        # If remote but explicitly another country, reject
+        country_block = ["uk", "united kingdom", "canada", "poland", "spain", "india", "germany", "france", "australia"]
+        if any(c in loc for c in country_block):
+            return False
+        # If remote but silent (no country), keep only if user asked for Remote US (treat as review)
+        # You can decide: keep or reject. For now: keep.
+        return any("remote" in normalize(x) for x in locations)
+
+    # If Texas is allowed, accept major Texas city mentions even if "Texas" isn't written
+    texas_markers = ["texas", "tx", "austin", "dallas", "houston", "san antonio"]
+    if any("texas" in normalize(x) or "tx" in normalize(x) for x in locations):
+        if any(m in loc for m in texas_markers):
+            return True
+
+    # Normal substring match
+    return any(normalize(x) in loc for x in locations)
+
 
 
 # ----------------------------
@@ -302,6 +328,7 @@ def main() -> int:
     "sponsor_ok": 0,
     "score_ok": 0,
 }
+    pre_score = 0
 
     for job in all_jobs:
         counts["total"] += 1
@@ -332,6 +359,7 @@ def main() -> int:
         if CONFIG.get("reject_if_no_sponsorship", False) and sponsor == "NO":
             continue
         counts["sponsor_ok"] += 1
+        pre_score += 1
 
         score = match_score(job, keyword_phrases)
         print(f"[DEBUG] SCORE {score:3} | {job.company} | {job.title} | {job.location}")
@@ -341,13 +369,15 @@ def main() -> int:
         counts["score_ok"] += 1
 
         candidates.append((job, score, sponsor))
-
+        
 
     # ✅ THIS IS THE PRINT YOU ASKED ABOUT (EXACTLY)
+    print(f"[DEBUG] Pre-score candidates (location+sponsor ok): {pre_score}")
+
     print(f"[INFO] Intern-filtered matches: {len(candidates)}")
     print("[DEBUG] Filter counts:", counts)
     print("[DEBUG] Pre-score candidates (location+sponsor ok):", len([1 for _ in candidates]))
-
+    
 
     # Sort and cap results
     candidates.sort(key=lambda x: (x[1], normalize(x[0].title)), reverse=True)

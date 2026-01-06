@@ -27,16 +27,17 @@ jobs:
         id: date
         run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-      - name: Get current date for test
+      - name: Get current date in CST
         id: test_timestamp
-        run: echo "now=$(date +'%Y-%m-%d-%H-%M')" >> $GITHUB_OUTPUT
+        # This sets the shell to Central Standard Time for this command
+        run: echo "now=$(TZ='America/Chicago' date +'%Y-%m-%d-%H-%M')" >> $GITHUB_OUTPUT
 
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Step 1 - Fetch jobs
+      - name: Step 1 - Fetch jobs + create/update digest issue
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
@@ -47,10 +48,15 @@ jobs:
       - name: Debug - Check File Content
         run: |
           echo "Checking if digest.md exists..."
-          ls -l digest.md
+          ls -l ./scripts/digest.md
           echo "--- File Content Start ---"
-          cat digest.md
-          echo "--- File Content End ---"  
+          cat ./scripts/digest.md
+          echo "--- File Content End ---"
+          
+      - name: Verify digest exists
+        run: |
+          test -f ./scripts/digest.md || (echo "scripts/digest.md not found. Step 1 did not generate it." && exit 1)
+    
 
       - name: Step 2 - Create or Update Issue
         uses: imjohnbo/issue-bot@v3
